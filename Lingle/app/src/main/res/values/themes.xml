@@ -1,0 +1,19 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Lingle" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <!--Para el color de la barra del sistema-->
+        <item name="android:statusBarColor">@color/darkPrimary</item>
+
+        <!--Colores para los switch-->
+        <item name="colorControlActivated">@color/white</item>
+
+        <item name="colorSwitchThumbNormal">@color/secondary</item>
+
+        <item name="android:colorForeground">@color/darkPrimary</item>
+    </style>
+
+    <style name="Theme.Lingle" parent="Base.Theme.Lingle" />
+</resources>
