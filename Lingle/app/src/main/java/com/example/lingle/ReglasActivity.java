@@ -56,22 +56,13 @@ public class ReglasActivity extends AppCompatActivity {
         green.startAnimation(animationFlip); yellow.startAnimation(animationFlip);
         black.startAnimation(animationFlip);
 
-        //botones hacia la actividad de jugar y main
+        //botón para volver
         Button buttonVolver = (Button) findViewById(R.id.buttonVolverReglas);
-        Button buttonJugar = (Button) findViewById(R.id.buttonJugarReglas);
 
         buttonVolver.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish(); //cierra la ReglasActivity y muestra de nuevo el menú o JugarActivity
-            }
-        });
-        buttonJugar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //inicia una nueva partida
-                startActivity(new Intent(ReglasActivity.this, JugarActivity.class));
-                finish();
             }
         });
     }

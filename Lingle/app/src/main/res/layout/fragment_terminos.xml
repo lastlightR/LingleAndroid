@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".TerminosFragment">
+
+    <TextView
+        android:id="@+id/textView11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/bookosb"
+        android:text="Términos de licencia"
+        android:textColor="@color/primary"
+        android:textSize="28sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView12"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:paddingStart="25dp"
+        android:paddingEnd="25dp"
+        android:justificationMode="inter_word"
+        android:text="Lingle es un rompecabezas de resolución de palabras de cinco letras en cualquier idioma, realizando la combinación de dos idiomas seleccionados. Este programa ha surgido como inspiración de Wordle. Al crear una cuenta con nosotros, estás aceptando los siguientes términos:\n\nUso Responsable:\n
+    1.1. Lingle es para uso personal y no comercial.\n
+    1.2. Compromiso de utilizar la aplicación de manera ética y respetuosa.\n\nRegistro y Cuenta:\n
+    2.1. Necesitas registrarte para disfrutar de todas las funciones.\n
+    2.2. Proporciona información precisa y mantén tu contraseña segura.\n\nPropiedad Compartida:\n
+    3.1. Lingle y su contenido son de código abierto y propiedad compartida.\n
+    3.2. Puedes modificar y compartir, pero respeta los derechos de autor.\n\nFlexibilidad y Notificaciones:\n
+    4.1. Nos reservamos el derecho de actualizar la aplicación y modificar términos.\n
+    4.2. Te notificaremos sobre cambios importantes y búsqueda de palabras que no has adivinado.\n\nPrivacidad Simplificada:\n
+    5.1. Recopilamos datos según nuestra Política de Privacidad de código abierto.\n
+    5.2. Al usar Lingle, aceptas nuestra Política de Privacidad.\n\nComunidad Colaborativa:\n
+    6.1. Colabora y respeta a los demás usuarios.\n
+    6.2. La violación de estos términos puede resultar en la terminación de tu cuenta.\n\nAl unirte a Lingle, confirmas haber leído y aceptado estos términos de código abierto. ¡Disfruta resolviendo palabras en Lingle!"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView11" />
+</androidx.constraintlayout.widget.ConstraintLayout>

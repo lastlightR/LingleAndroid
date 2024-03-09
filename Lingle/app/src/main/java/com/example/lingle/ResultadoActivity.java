@@ -15,14 +15,18 @@ import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
+
 public class ResultadoActivity extends AppCompatActivity {
+
+    Intent fromJugarActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resultado);
 
-        Intent fromJugarActivity = getIntent(); //recibimos el Intent pasado por JugarActivity
+        fromJugarActivity = getIntent(); //recibimos el Intent pasado por JugarActivity
 
         Button buttonSignificado = (Button) findViewById(R.id.buttonSignificado);
         buttonSignificado.append(fromJugarActivity.getStringExtra("correctWord_key")+" en Google"); //añadimos la palabra recibida del Intent
@@ -68,8 +72,21 @@ public class ResultadoActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 JugarActivity.jugarActivity.finish(); //finaliza la JugarActivity previa
-                startActivity(new Intent(ResultadoActivity.this, JugarActivity.class));
+                Intent intent = new Intent(ResultadoActivity.this, JugarActivity.class);
+                //enviamos el modo de juego almacenado
+                intent.putExtra("modoJuego", fromJugarActivity.getStringExtra("modoJuego"));
+                intent.putExtra("esInvitado", fromJugarActivity.getStringExtra("esInvitado"));
+                startActivity(intent);
                 finish();
+            }
+        });
+        Button buttonStats = (Button) findViewById(R.id.buttonStatsDesdeResultado);
+        if (fromJugarActivity.getStringExtra("esInvitado").equals("usuarionormal"))
+            buttonStats.setVisibility(View.VISIBLE);
+        buttonStats.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ResultadoActivity.this, StatsActivity.class));
             }
         });
     }

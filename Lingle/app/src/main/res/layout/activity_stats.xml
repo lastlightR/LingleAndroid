@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryLight"
+    tools:context=".StatsActivity">
+
+
+    <TextView
+        android:id="@+id/textViewTotal6"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greenTile"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:typeface="serif"
+        android:paddingStart="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView56269"
+        app:layout_constraintStart_toEndOf="@+id/imageView56269"
+        app:layout_constraintTop_toTopOf="@+id/imageView56269" />
+
+    <ImageView
+        android:id="@+id/imageView56269"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView5626"
+        app:srcCompat="@drawable/number6" />
+
+    <TextView
+        android:id="@+id/textViewTotal5"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greenTile"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:typeface="serif"
+        android:paddingStart="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView5626"
+        app:layout_constraintStart_toEndOf="@+id/imageView5626"
+        app:layout_constraintTop_toTopOf="@+id/imageView5626" />
+
+    <ImageView
+        android:id="@+id/imageView5626"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView56"
+        app:srcCompat="@drawable/number5" />
+
+    <TextView
+        android:id="@+id/textViewTotal4"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greenTile"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:typeface="serif"
+        android:paddingStart="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView56"
+        app:layout_constraintStart_toEndOf="@+id/imageView56"
+        app:layout_constraintTop_toTopOf="@+id/imageView56" />
+
+    <ImageView
+        android:id="@+id/imageView56"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView565"
+        app:srcCompat="@drawable/number4" />
+
+    <TextView
+        android:id="@+id/textViewTotal3"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greenTile"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:typeface="serif"
+        android:paddingStart="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView565"
+        app:layout_constraintStart_toEndOf="@+id/imageView565"
+        app:layout_constraintTop_toTopOf="@+id/imageView565" />
+
+    <ImageView
+        android:id="@+id/imageView565"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView5657"
+        app:srcCompat="@drawable/number3" />
+
+    <ImageView
+        android:id="@+id/imageView5657"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView7"
+        app:srcCompat="@drawable/number2" />
+
+    <TextView
+        android:id="@+id/textViewTotal2"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greenTile"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:typeface="serif"
+        android:paddingStart="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView5657"
+        app:layout_constraintStart_toEndOf="@+id/imageView5657"
+        app:layout_constraintTop_toTopOf="@+id/imageView5657" />
+
+    <TextView
+        android:id="@+id/textViewStatsDeUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:fontFamily="@font/bookosb"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
+        android:text="Stats de "
+        android:textColor="@color/primary"
+        android:textSize="28sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Nº partidas"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:typeface="monospace"
+        app:layout_constraintEnd_toStartOf="@+id/textView17"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatsDeUsername" />
+
+    <TextView
+        android:id="@+id/textView17"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Winrate %"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:typeface="monospace"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/textView16"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStatsDeUsername" />
+
+    <TextView
+        android:id="@+id/textViewNumPartidas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="0"
+        android:textSize="50sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@+id/textView16"
+        app:layout_constraintStart_toStartOf="@+id/textView16"
+        app:layout_constraintTop_toBottomOf="@+id/textView16" />
+
+    <TextView
+        android:id="@+id/textViewWinrate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="0"
+        android:textSize="50sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@+id/textView17"
+        app:layout_constraintStart_toStartOf="@+id/textView17"
+        app:layout_constraintTop_toBottomOf="@+id/textView17" />
+
+    <Button
+        android:id="@+id/buttonVolverStats"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:backgroundTint="@color/darkPrimary"
+        android:text="Volver"
+        android:textStyle="bold"
+        android:typeface="monospace"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewTotal6" />
+
+    <ImageView
+        android:id="@+id/imageView7"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewNumPartidas"
+        app:srcCompat="@drawable/number1" />
+
+    <TextView
+        android:id="@+id/textViewTotal1"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greenTile"
+        android:text="0"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:typeface="serif"
+        android:paddingStart="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView7"
+        app:layout_constraintStart_toEndOf="@+id/imageView7"
+        app:layout_constraintTop_toTopOf="@+id/imageView7" />
+</androidx.constraintlayout.widget.ConstraintLayout>

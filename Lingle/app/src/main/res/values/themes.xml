@@ -16,4 +16,18 @@
     </style>
 
     <style name="Theme.Lingle" parent="Base.Theme.Lingle" />
+
+    <style name="Theme.Lingle.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/primaryLight</item>
+    </style>
+
+
+    <style name="Theme.Lingle.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Lingle.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

@@ -2,28 +2,54 @@ package com.example.lingle;
 
 import static java.lang.Thread.sleep;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.PorterDuff;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.ContactsContract;
+import android.renderscript.ScriptGroup;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +59,20 @@ import java.io.InputStream;
  * @author Robyn
  */
 public class JugarActivity extends AppCompatActivity implements View.OnClickListener {
+
+    //objetos útiles de Firebase
+    FirebaseUser user;
+    DocumentReference reference;
+    FirebaseFirestore db;
+    String uid; //UID del usuario logueado
+
+    //objetos del header a modificar
+    TextView usernameHeader;
+    TextView emailHeader;
+    ImageView lingleHeader;
+    String usernameHead, emailHead;
+    View navHeader;
+    NavigationView navigationView;
 
     //para finalizar la Activity desde otras
     public static Activity jugarActivity;
@@ -54,7 +94,7 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
             isRow5Filled = false, isRow6Filled = false;
 
     //para modificar el color de fondo
-    ConstraintLayout layoutJugar;
+    DrawerLayout layoutJugar;
     //Switch switchDarkMode;
     /**
     //preparación de casillas a rellenar
@@ -127,6 +167,11 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
     TextView[] row5 = new TextView[5];
     TextView[] row6 = new TextView[5];
 
+    //toolbar de la activity
+    Toolbar toolbar;
+    //toggle para abrir la navegación
+    ActionBarDrawerToggle abdt;
+
     //instanciamos una clase Lingle
     Lingle lingle = null;
 
@@ -142,22 +187,133 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
     //número de intentos
     int numIntentos = 0;
 
+    Intent fromInicioJuego;
+
+    boolean esModoOscuro;
+
+    AlertDialog alertDialog; //dialog para nueva partida desde el menú
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_jugar);
-        layoutJugar = (ConstraintLayout) findViewById(R.id.layoutJugar);
+        layoutJugar = (DrawerLayout) findViewById(R.id.layoutJugar);
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false); //desactiva el título de la app en la toolbar
+        esModoOscuro = true; //se declara la interfaz en modo oscuro inicialmente
+
+        //configuración del toggle para abrir el NavDrawer
+        abdt = new ActionBarDrawerToggle(this, layoutJugar, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        abdt.getDrawerArrowDrawable().setColor(ContextCompat.getColor(this, R.color.primaryLight));
+        layoutJugar.addDrawerListener(abdt);
+        abdt.syncState();
+
+        //configuración de la vista de navegación
+        navigationView = findViewById(R.id.nav_drawer);
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        //maneja los clicks en cada ítem
+                        int id = menuItem.getItemId();
+
+                        if (id == R.id.itemNuevaPartida) {
+                            //nueva partida
+                            mostrarDialogNuevaPartida();
+                            Log.d("NavigationDebug", "onNavigationItemSelected: " + menuItem.getTitle());
+                        } else if (id == R.id.itemStats) {
+                            //stats
+                            Log.d("NavigationDebug", "onNavigationItemSelected: " + menuItem.getTitle());
+                            startActivity(new Intent(JugarActivity.this, StatsActivity.class));
+                        } else if (id == R.id.itemModoOscuro) {
+                            Log.d("NavigationDebug", "onNavigationItemSelected: " + menuItem.getTitle());
+                            //activa o desactiva el modo oscuro
+                            if (esModoOscuro) {
+                                cambiarModoOscuro(false);
+                                esModoOscuro = false;
+                            }
+                            else {
+                                cambiarModoOscuro(true);
+                                esModoOscuro = true;
+                            }
+                        } else if (id == R.id.itemVolver) {
+                            //volver
+                            Log.d("NavigationDebug", "onNavigationItemSelected: " + menuItem.getTitle());
+                            finish();
+                        }
+                        else if (id == R.id.itemCerrarSesion) {
+                            //cierre sesión
+                            Log.d("NavigationDebug", "onNavigationItemSelected: " + menuItem.getTitle());
+                            AlertDialog.Builder builder = new AlertDialog.Builder(JugarActivity.this);
+                            builder.setMessage("¿Seguro que quieres cerrar sesión?")
+                                    .setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            FirebaseAuth.getInstance().signOut(); //cierra sesión de Firebase
+                                            //pone a false las preferencias
+                                            SharedPreferences sharedPref = getSharedPreferences("PreferenciasLogin", Context.MODE_PRIVATE);
+                                            SharedPreferences.Editor editor = sharedPref.edit();
+                                            editor.putBoolean("Preferencias_logueado", false);
+                                            editor.apply();
+                                            //vuelve al MainActivity y cierra este
+                                            startActivity(new Intent(JugarActivity.this, MainActivity.class));
+                                            finish();
+                                        }
+                                    })
+                                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            //cierra el cuadro de diálogo
+                                            dialog.dismiss();
+                                        }
+                                    });
+                            //muestra el cuadro de diálogo con las opciones
+                            builder.create().show();
+                        }
+                        //cerrar view
+                        layoutJugar.closeDrawer(GravityCompat.START);
+                        return true;
+                    }
+                });
+
+        //referencias a objetos del header para modificarlos
+        navHeader = navigationView.getHeaderView(0);
+        usernameHeader = navHeader.findViewById(R.id.textViewUsernameHeader);
+        emailHeader = navHeader.findViewById(R.id.textViewEmailHeader);
+        lingleHeader = navHeader.findViewById(R.id.imageViewLingleHeader);
+
+        fromInicioJuego = getIntent(); //para recibir el modo de juego
+
+        //items a ocultar a invitados
+        MenuItem statsItem = navigationView.getMenu().findItem(R.id.itemStats);
+        MenuItem cerrarSesionItem = navigationView.getMenu().findItem(R.id.itemCerrarSesion);
+        statsItem.setVisible(false); cerrarSesionItem.setVisible(false);
+        //solo se hace esta inicialización si no es usuario invitado
+        if (fromInicioJuego.getStringExtra("esInvitado").equals("usuarionormal")) {
+            //inicialización de valores Firebase
+            db = FirebaseFirestore.getInstance();
+            user = FirebaseAuth.getInstance().getCurrentUser();
+            uid = user.getUid();
+            Log.i("UID", uid);
+            //cambiamos los nombres en el header
+            getUsernameHeader(uid); getEmailHeader(uid);
+            //se hacen visibles para usuarios logueados
+            statsItem.setVisible(true); cerrarSesionItem.setVisible(true);
+        }
 
         jugarActivity = this; //activity, que se finalizará en otras
         //AssetManager am = getApplicationContext().getAssets();
 
         InputStream dictionary5;
         InputStream diccionario5;
+        InputStream dictionary5aux;
+        InputStream diccionario5aux;
         InputStream bothDictionaries5;
         try {
             dictionary5 = getAssets().open("dictionary_5.txt");
             diccionario5 = getAssets().open("diccionario_5_noTildes.txt");
+            dictionary5aux = getAssets().open("dictionary_5_aux.txt");
+            diccionario5aux = getAssets().open("diccionario_5_noTildes_aux.txt");
             bothDictionaries5 = getAssets().open("both_dictionaries_5.txt");
         } catch (IOException e) {
             Log.i("IOException", "Excepción IO a la hora de inicializar diccionarios.");
@@ -171,17 +327,33 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
         //Scanner scanner = new Scanner(System.in);
         int length_dictionary = 0; //por algún motivo, length() da valores extraños
 
-        lingle = new Lingle(bothDictionaries5); //inicializa lingle con el diccionario
-        if (chooseDictionary() == 0) {
+        if (fromInicioJuego.getStringExtra("modoJuego").equals("ambos")) {
+            lingle = new Lingle(bothDictionaries5); //inicializa lingle con ambos diccionarios
+            //selecciona un diccionario random del que elegir la palabra
+            if (chooseDictionary() == 0) {
+                length_dictionary = 8937;
+                lingle.setCorrect_word(dictionary5, length_dictionary);
+                chosen_dictionary = "inglés";
+            }
+            else {
+                length_dictionary = 5537;
+                lingle.setCorrect_word(diccionario5, length_dictionary);
+                chosen_dictionary = "español";
+            }
+        }
+        else if (fromInicioJuego.getStringExtra("modoJuego").equals("ingles")) {
+            lingle = new Lingle(dictionary5aux); //inicializa lingle con el diccionario inglés
             length_dictionary = 8937;
             lingle.setCorrect_word(dictionary5, length_dictionary);
             chosen_dictionary = "inglés";
         }
-        else {
+        else if (fromInicioJuego.getStringExtra("modoJuego").equals("espanol")) {
+            lingle = new Lingle(diccionario5aux); //inicializa lingle con el diccionario español
             length_dictionary = 5537;
             lingle.setCorrect_word(diccionario5, length_dictionary);
             chosen_dictionary = "español";
         }
+
         Log.i("PALABRA CORRECTA", "La palabra correcta, del "+chosen_dictionary+", es: "+lingle.getCorrect_word());
 
         //preparación de botones del teclado
@@ -246,89 +418,8 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
         buttonDelete.setOnClickListener(this);
         ImageView imageViewInfo = (ImageView) findViewById(R.id.imageViewReglas);
         imageViewInfo.setOnClickListener(this);
-        ImageView imageViewBack = (ImageView) findViewById(R.id.imageViewBackButton);
-        imageViewBack.setOnClickListener(this);
-        ImageView imageViewReset = (ImageView) findViewById(R.id.imageViewResetButton);
-        imageViewReset.setOnClickListener(this);
-
-        ImageView moon = (ImageView) findViewById(R.id.imageViewMoon);
         ImageView logo = (ImageView) findViewById(R.id.imageViewLingle);
         ImageView info = (ImageView) findViewById(R.id.imageViewReglas);
-        //este switch activa o desactiva el modo oscuro si se se le pulsa
-        Switch switchDarkMode = (Switch) findViewById(R.id.switchDarkMode);
-        switchDarkMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (switchDarkMode.isChecked()) {
-                    layoutJugar.setBackgroundResource(R.color.primary);
-                    moon.setImageResource(R.drawable.dark_mode_white);
-                    logo.setImageResource(R.drawable.lingle_text_white);
-                    info.setImageResource(R.drawable.android_information_icon_white);
-                    imageViewBack.setImageResource(R.drawable.back_button_light);
-                    imageViewReset.setImageResource(R.drawable.restart_button_light);
-                    for(int i=0;i<5;i++){
-                        if (!isRow1Filled){
-                            row1[i].setBackground(getDrawable(R.drawable.border));
-                            row1[i].setTextColor(getResources().getColor(R.color.white));
-                        }
-                        if (!isRow2Filled) {
-                            row2[i].setBackground(getDrawable(R.drawable.border));
-                            row2[i].setTextColor(getResources().getColor(R.color.white));
-                        }
-                        if (!isRow3Filled) {
-                            row3[i].setBackground(getDrawable(R.drawable.border));
-                            row3[i].setTextColor(getResources().getColor(R.color.white));
-                        }
-                        if (!isRow4Filled) {
-                            row4[i].setBackground(getDrawable(R.drawable.border));
-                            row4[i].setTextColor(getResources().getColor(R.color.white));
-                        }
-                        if (!isRow5Filled) {
-                            row5[i].setBackground(getDrawable(R.drawable.border));
-                            row5[i].setTextColor(getResources().getColor(R.color.white));
-                        }
-                        if (!isRow6Filled) {
-                            row6[i].setBackground(getDrawable(R.drawable.border));
-                            row6[i].setTextColor(getResources().getColor(R.color.white));
-                        }
-                    }
-                }
-                else {
-                    layoutJugar.setBackgroundResource(R.color.primaryLight);
-                    moon.setImageResource(R.drawable.dark_mode_black);
-                    logo.setImageResource(R.drawable.lingle_text);
-                    info.setImageResource(R.drawable.android_information_icon);
-                    imageViewBack.setImageResource(R.drawable.back_button_dark);
-                    imageViewReset.setImageResource(R.drawable.restart_button_dark);
-                    for(int i=0;i<5;i++){
-                        if (!isRow1Filled){
-                            row1[i].setBackground(getDrawable(R.drawable.border_light));
-                            row1[i].setTextColor(getResources().getColor(R.color.black));
-                        }
-                        if (!isRow2Filled) {
-                            row2[i].setBackground(getDrawable(R.drawable.border_light));
-                            row2[i].setTextColor(getResources().getColor(R.color.black));
-                        }
-                        if (!isRow3Filled) {
-                            row3[i].setBackground(getDrawable(R.drawable.border_light));
-                            row3[i].setTextColor(getResources().getColor(R.color.black));
-                        }
-                        if (!isRow4Filled) {
-                            row4[i].setBackground(getDrawable(R.drawable.border_light));
-                            row4[i].setTextColor(getResources().getColor(R.color.black));
-                        }
-                        if (!isRow5Filled) {
-                            row5[i].setBackground(getDrawable(R.drawable.border_light));
-                            row5[i].setTextColor(getResources().getColor(R.color.black));
-                        }
-                        if (!isRow6Filled) {
-                            row6[i].setBackground(getDrawable(R.drawable.border_light));
-                            row6[i].setTextColor(getResources().getColor(R.color.black));
-                        }
-                    }
-                }
-            }
-        });
 
         //inicialización de arrays de TextViews por cada fila
         for (int i=0;i<5;i++)
@@ -880,12 +971,18 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
                 if (lingle.getCorrect_word().equals(guess)) {
                     countRow = 0; //si la palabra es correcta, ya no se podrá escribir más
 
+                    //conservamos el modo de juego por si se llama desde el resultado
+                    String modoJuego = fromInicioJuego.getStringExtra("modoJuego");
+                    String esInvitado = fromInicioJuego.getStringExtra("esInvitado");
+
                     //añadimos datos a pasar al nuevo activity
                     intentResultadoAct.putExtra("numTries_key", ""+numIntentos);
                     intentResultadoAct.putExtra("lossNotification_key", ""); //no se pasa nada si no se pierde
                     intentResultadoAct.putExtra("correctWord_key", guess);
                     intentResultadoAct.putExtra("textView_key", "La palabra correcta era "+guess+
                             ", del diccionario "+chosen_dictionary);
+                    intentResultadoAct.putExtra("modoJuego", modoJuego);
+                    intentResultadoAct.putExtra("esInvitado", esInvitado);
                     //nos aseguramos de que se pasa el último valor al StringBuilder
                     for (int i=0;i<5;i++){
                         if (yellowGreen.charAt(i) == 'X')
@@ -900,6 +997,11 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
                         intentResultadoAct.putExtra("wordSearch_key", guess + "+significado");
                     else intentResultadoAct.putExtra("wordSearch_key", guess + "+meaning");
 
+                    //actualización de stats para el usuario si no es invitado
+                    if (fromInicioJuego.getStringExtra("esInvitado").equals("usuarionormal")) {
+                        actualizarStats(uid, numIntentos);
+                    }
+
                     Handler handler = new Handler();
                     Runnable runnable = new Runnable() {
                         @Override
@@ -908,13 +1010,6 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
                         }
                     };
                     handler.postDelayed(runnable, 2000);
-                    /**
-                    //PendingIntent para darle un tiempo antes de cambiar de activity
-                    PendingIntent pIntentResultadoAct = PendingIntent.getActivity(getApplicationContext(), 10, intentResultadoAct, PendingIntent.FLAG_UPDATE_CURRENT);
-                    AlarmManager alarmResultadoAct = (AlarmManager)this.getSystemService(this.ALARM_SERVICE);
-                    //el Intent se iniciará pasado un segundo (1000 milisegundos)
-                    alarmResultadoAct.setExact(AlarmManager.RTC, 1000, pIntentResultadoAct);
-                     */
                 }
                 else {
                     countRow++; //pasamos a la siguiente fila
@@ -922,12 +1017,19 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
                 }
                 if (numIntentos == 6 && !lingle.getCorrect_word().equals(guess)){
                     Toast.makeText(JugarActivity.this, "¡Otra vez será!", Toast.LENGTH_SHORT).show();
+
+                    //conservamos el modo de juego por si se llama desde el resultado
+                    String modoJuego = fromInicioJuego.getStringExtra("modoJuego");
+                    String esInvitado = fromInicioJuego.getStringExtra("esInvitado");
+
                     //si se terminan los intentos sin acertar, se pasan otros datos al Intent
                     intentResultadoAct.putExtra("numTries_key", "X"); //se pasa X como número de intentos al perder
                     intentResultadoAct.putExtra("lossNotification_key", "¡Una pena!"); //mensaje al perder
                     intentResultadoAct.putExtra("correctWord_key", lingle.getCorrect_word());
                     intentResultadoAct.putExtra("textView_key", "La palabra correcta era "+lingle.getCorrect_word()+
                             ", del diccionario "+chosen_dictionary);
+                    intentResultadoAct.putExtra("modoJuego", modoJuego);
+                    intentResultadoAct.putExtra("esInvitado", esInvitado);
                     //nos aseguramos de que se pasa el último valor al StringBuilder
                     for (int i=0;i<5;i++){
                         if (yellowGreen.charAt(i) == 'X')
@@ -942,6 +1044,11 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
                         intentResultadoAct.putExtra("wordSearch_key", lingle.getCorrect_word() + "+significado");
                     else intentResultadoAct.putExtra("wordSearch_key", lingle.getCorrect_word() + "+meaning");
 
+                    //actualización de stats para el usuario si no es invitado y ha perdido
+                    if (fromInicioJuego.getStringExtra("esInvitado").equals("usuarionormal")) {
+                        actualizarStats(uid, 0);
+                    }
+
                     //handler para darle un pequeño delay de 2 segundos antes de iniciar el activity final
                     Handler handler = new Handler();
                     Runnable runnable = new Runnable() {
@@ -951,13 +1058,6 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
                         }
                     };
                     handler.postDelayed(runnable, 2000);
-                    /**
-                    //PendingIntent para darle un tiempo antes de cambiar de activity
-                    PendingIntent pIntentResultadoAct = PendingIntent.getActivity(getApplicationContext(), 10, intentResultadoAct, PendingIntent.FLAG_UPDATE_CURRENT);
-                    AlarmManager alarmResultadoAct = (AlarmManager)this.getSystemService(this.ALARM_SERVICE);
-                    //el Intent se iniciará pasado un segundo (1000 milisegundos)
-                    alarmResultadoAct.setExact(AlarmManager.RTC, 1000, pIntentResultadoAct);
-                     */
                 }
             } else {
                 //animación de parpadeo cuando la palabra no está en el diccionario
@@ -1274,12 +1374,237 @@ public class JugarActivity extends AppCompatActivity implements View.OnClickList
             pressEnter();
         else if (v.getId() == R.id.imageViewReglas)
             startActivity(new Intent(JugarActivity.this, ReglasActivity.class));
-        else if (v.getId() == R.id.imageViewBackButton)
+        /**else if (v.getId() == R.id.imageViewBackButton)
             finish(); //el botón atrás finaliza la actividad de jugar y vuelve a la pantalla de inicio
         else if (v.getId() == R.id.imageViewResetButton) {
             finish();
-            startActivity(new Intent(JugarActivity.this, JugarActivity.class));
+            Intent intent = new Intent(JugarActivity.this, JugarActivity.class);
+            intent.putExtra("modoJuego", fromInicioJuego.getStringExtra("modoJuego"));
+            startActivity(intent);
             //finaliza la actividad e inicia una nueva con otra palabra
+        }*/
+    }
+
+    //múltiples métodos para modificar o recibir documentos del usuario
+    //método para colocar el nombre de usuario en el header
+    private void getUsernameHeader(String uid) {
+        reference = db.collection("users").document(uid); //conseguimos la referencia al documento del usuario actual
+
+        //recibimos el documento y realizamos operaciones sobre ello
+        reference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        //extraemos el valor del campo username
+                        usernameHead = document.getString("username");
+                        Log.i("Username", usernameHead);
+                        usernameHeader.setText(usernameHead);
+                    } else {
+                        //el documento no existe
+                        Toast.makeText(JugarActivity.this, "El documento no existe", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.e("Firestore", "Error getting document", task.getException());
+                }
+            }
+        });
+    }
+
+    //método para colocar el email en el header
+    private void getEmailHeader(String uid) {
+        reference = db.collection("users").document(uid); //conseguimos la referencia al documento del usuario actual
+
+        //recibimos el documento y realizamos operaciones sobre ello
+        reference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        //extraemos el valor del campo email
+                        emailHead = document.getString("email");
+                        Log.i("E-mail", emailHead);
+                        emailHeader.setText(emailHead);
+                    } else {
+                        //el documento no existe
+                        Toast.makeText(JugarActivity.this, "El documento no existe", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Log.e("Firestore", "Error getting document", task.getException());
+                }
+            }
+        });
+    }
+
+    //método para actualizar las stats del usuario al acabar la partida
+    //si se pasa el valor de 0 en intentos, se registra como derrota
+    private void actualizarStats(String uid, int intentos) {
+        reference = db.collection("stats").document(uid);
+        String campoAIncrementar = ""; //campo que incrementaremos dependiendo de los intentos recibidos
+        //cada stat es para el número de intentos de la partida o si se ha perdido
+        //el número de partidas jugadas se incrementa siempre
+        switch (intentos) {
+            case 0: campoAIncrementar = "losses"; break;
+            case 1: campoAIncrementar = "onetry"; break;
+            case 2: campoAIncrementar = "twotries"; break;
+            case 3: campoAIncrementar = "threetries"; break;
+            case 4: campoAIncrementar = "fourtries"; break;
+            case 5: campoAIncrementar = "fivetries"; break;
+            case 6: campoAIncrementar = "sixtries"; break;
         }
+        //update de los campos del documento del usuario en la colección stats
+        reference.update(campoAIncrementar, FieldValue.increment(1),
+                        "totalmatches", FieldValue.increment(1))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.i("Campos aumentados", "en Firestore");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.i("Error Firestore", "Los campos no han sido aumentados");
+                    }
+                });
+    }
+
+    private void cambiarModoOscuro (boolean modoOscuro){
+        ImageView linglelogo = (ImageView) findViewById(R.id.imageViewLingle);
+        ImageView reglas = (ImageView) findViewById(R.id.imageViewReglas);
+        if (modoOscuro) {
+            layoutJugar.setBackgroundResource(R.color.primary);
+            toolbar.setBackgroundResource(R.color.primary);
+            navigationView.setBackgroundColor(getResources().getColor(R.color.primary));
+            navigationView.setItemTextColor(getColorStateList(R.color.primaryLight));
+            navigationView.setItemIconTintList(getColorStateList(R.color.primaryLight));
+            abdt.getDrawerArrowDrawable().setColor(ContextCompat.getColor(this, R.color.primaryLight));
+            linglelogo.setImageResource(R.drawable.lingle_text_white);
+            reglas.setImageResource(R.drawable.android_information_icon_white);
+            usernameHeader.setTextColor(getResources().getColor(R.color.primaryLight));
+            emailHeader.setTextColor(getResources().getColor(R.color.primaryLight));
+            lingleHeader.setImageResource(R.drawable.lingle_text_white);
+            for(int i=0;i<5;i++){
+                if (!isRow1Filled){
+                    row1[i].setBackground(getDrawable(R.drawable.border));
+                    row1[i].setTextColor(getResources().getColor(R.color.white));
+                }
+                if (!isRow2Filled) {
+                    row2[i].setBackground(getDrawable(R.drawable.border));
+                    row2[i].setTextColor(getResources().getColor(R.color.white));
+                }
+                if (!isRow3Filled) {
+                    row3[i].setBackground(getDrawable(R.drawable.border));
+                    row3[i].setTextColor(getResources().getColor(R.color.white));
+                }
+                if (!isRow4Filled) {
+                    row4[i].setBackground(getDrawable(R.drawable.border));
+                    row4[i].setTextColor(getResources().getColor(R.color.white));
+                }
+                if (!isRow5Filled) {
+                    row5[i].setBackground(getDrawable(R.drawable.border));
+                    row5[i].setTextColor(getResources().getColor(R.color.white));
+                }
+                if (!isRow6Filled) {
+                    row6[i].setBackground(getDrawable(R.drawable.border));
+                    row6[i].setTextColor(getResources().getColor(R.color.white));
+                }
+            }
+        }
+        else {
+        layoutJugar.setBackgroundResource(R.color.primaryLight);
+        toolbar.setBackgroundResource(R.color.primaryLight);
+        navigationView.setBackgroundColor(getResources().getColor(R.color.primaryLight));
+        navigationView.setItemTextColor(getColorStateList(R.color.darkPrimary));
+        navigationView.setItemIconTintList(getColorStateList(R.color.darkPrimary));
+        abdt.getDrawerArrowDrawable().setColor(ContextCompat.getColor(this, R.color.darkPrimary));
+        linglelogo.setImageResource(R.drawable.lingle_text);
+        reglas.setImageResource(R.drawable.android_information_icon);
+        usernameHeader.setTextColor(getResources().getColor(R.color.darkPrimary));
+        emailHeader.setTextColor(getResources().getColor(R.color.darkPrimary));
+        lingleHeader.setImageResource(R.drawable.lingle_text);
+        for(int i=0;i<5;i++){
+            if (!isRow1Filled){
+                row1[i].setBackground(getDrawable(R.drawable.border_light));
+                row1[i].setTextColor(getResources().getColor(R.color.black));
+            }
+            if (!isRow2Filled) {
+                row2[i].setBackground(getDrawable(R.drawable.border_light));
+                row2[i].setTextColor(getResources().getColor(R.color.black));
+            }
+            if (!isRow3Filled) {
+                row3[i].setBackground(getDrawable(R.drawable.border_light));
+                row3[i].setTextColor(getResources().getColor(R.color.black));
+            }
+            if (!isRow4Filled) {
+                row4[i].setBackground(getDrawable(R.drawable.border_light));
+                row4[i].setTextColor(getResources().getColor(R.color.black));
+            }
+            if (!isRow5Filled) {
+                row5[i].setBackground(getDrawable(R.drawable.border_light));
+                row5[i].setTextColor(getResources().getColor(R.color.black));
+            }
+            if (!isRow6Filled) {
+                row6[i].setBackground(getDrawable(R.drawable.border_light));
+                row6[i].setTextColor(getResources().getColor(R.color.black));
+            }
+        }
+    }
+    }
+
+    private void mostrarDialogNuevaPartida() {
+        //creación del AlertDialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        //para inflar el layout con el XML
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_nueva_partida, null);
+        builder.setView(dialogView);
+
+        Button buttonNuevaPartida = (Button) dialogView.findViewById(R.id.btnComenzarNuevaPartida);
+        Button buttonCancelar = (Button) dialogView.findViewById(R.id.btnCancelarNuevaPartida);
+        CheckBox checkBoxEspanol = (CheckBox) dialogView.findViewById(R.id.checkBoxEspanol);
+        CheckBox checkBoxIngles = (CheckBox) dialogView.findViewById(R.id.checkBoxIngles);
+
+        alertDialog = builder.create();
+
+        buttonNuevaPartida.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String esInvitado = fromInicioJuego.getStringExtra("esInvitado");
+                Intent haciaJugarActivity = new Intent(JugarActivity.this, JugarActivity.class);
+                //si no hay nada marcado no inicia partida
+                if (!checkBoxEspanol.isChecked() && !checkBoxIngles.isChecked()) {
+                    Toast.makeText(JugarActivity.this, "Selecciona al menos un idioma", Toast.LENGTH_SHORT).show();
+                }
+                else if (checkBoxEspanol.isChecked() && checkBoxIngles.isChecked()) {
+                    haciaJugarActivity.putExtra("modoJuego", "ambos");
+                    haciaJugarActivity.putExtra("esInvitado", esInvitado);
+                    startActivity(haciaJugarActivity);
+                    finish();
+                }
+                else if (checkBoxEspanol.isChecked() && !checkBoxIngles.isChecked()) {
+                    haciaJugarActivity.putExtra("modoJuego", "espanol");
+                    haciaJugarActivity.putExtra("esInvitado", esInvitado);
+                    startActivity(haciaJugarActivity);
+                    finish();
+                }
+                else if (!checkBoxEspanol.isChecked() && checkBoxIngles.isChecked()) {
+                    haciaJugarActivity.putExtra("modoJuego", "ingles");
+                    haciaJugarActivity.putExtra("esInvitado", esInvitado);
+                    startActivity(haciaJugarActivity);
+                    finish();
+                }
+            }
+        });
+        buttonCancelar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
+        });
+        alertDialog.show();
     }
 }

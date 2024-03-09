@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <item
+            android:id="@+id/itemNuevaPartida"
+            android:icon="@drawable/restart_button_light"
+            android:title="Nueva partida"
+            />
+        <item
+            android:id="@+id/itemStats"
+            android:icon="@android:drawable/ic_menu_agenda"
+            android:title="Stats" />
+        <item
+            android:id="@+id/itemModoOscuro"
+            android:icon="@drawable/dark_mode_white"
+            android:title="Modo oscuro" />
+        <item
+            android:id="@+id/itemVolver"
+            android:icon="@drawable/back_button_light"
+            android:title="Volver" />
+        <item
+            android:id="@+id/itemCerrarSesion"
+            android:icon="@android:drawable/ic_delete"
+            android:title="Cerrar sesión"
+            />
+
+</menu>

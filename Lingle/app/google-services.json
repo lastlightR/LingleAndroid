@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "612552009983",
+    "project_id": "lingle-6885e",
+    "storage_bucket": "lingle-6885e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612552009983:android:52947087d7bbf2ad4944ca",
+        "android_client_info": {
+          "package_name": "com.example.lingle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs0BsDloOGJ9WUi0yXwMvqZ_StZHOFjHo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
